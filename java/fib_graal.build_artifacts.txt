@@ -1,0 +1,3 @@
+[EXECUTABLE]
+java/fib_graal
+
