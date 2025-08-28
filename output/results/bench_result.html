@@ -25,17 +25,17 @@
 <body>
     <h1>🚀 编程语言性能测试报告</h1>
     <div class="summary">
-        <p><strong>测试时间:</strong> 1756373230</p>
+        <p><strong>测试时间:</strong> 1756453240</p>
         <p><strong>测试语言:</strong> 16 种</p>
-        <p><strong>测试用例:</strong> 2 个</p>
+        <p><strong>测试用例:</strong> 10 个</p>
     </div>
 
-    <h2>📊 fib - Fibonacci 43 (递归算法)</h2>
+    <h2>📊 fib - Fibonacci(递归算法)</h2>
     <div id="chart0" class="chart-container"></div>
     <script>
         const spec0 = {
             "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-            "description": "Fibonacci 43 (递归算法) 性能测试结果",
+            "description": "Fibonacci(递归算法) 性能测试结果",
             "title": {
                 "text": "fib - 编程语言性能对比",
                 "fontSize": 16,
@@ -44,7 +44,7 @@
             "width": 800,
             "height": 400,
             "data": {
-                "values": [{"language": "Java(JVM)", "time": 1359.0, "rank": 1},{"language": "C(GCC)", "time": 1586.0, "rank": 2},{"language": "Zig", "time": 1590.0, "rank": 3},{"language": "C(Clang)", "time": 1593.0, "rank": 4},{"language": "Rust", "time": 1594.0, "rank": 5},{"language": "Go", "time": 1731.0, "rank": 6},{"language": "Java(GraalVM)", "time": 1996.0, "rank": 7},{"language": "Swift", "time": 2001.0, "rank": 8},{"language": "JavaScript(Bun)", "time": 2548.0, "rank": 9},{"language": "Dart(AOT)", "time": 2798.0, "rank": 10},{"language": "Lua(LuaJIT)", "time": 4098.0, "rank": 11},{"language": "JavaScript(Node.js)", "time": 4955.0, "rank": 12},{"language": "Python(PyPy)", "time": 5685.0, "rank": 13},{"language": "Dart(JIT)", "time": 6749.0, "rank": 14},{"language": "Lua", "time": 43250.0, "rank": 15},{"language": "Python(CPython)", "time": 74740.0, "rank": 16}]
+                "values": [{"language": "C(GCC)", "time": 141.0, "rank": 1}]
             },
             "mark": {
                 "type": "bar",
@@ -105,132 +105,23 @@
         }).catch(console.error);
     </script>
 
-    <h2>📊 bubble_sort - 冒泡排序 30,000 整数</h2>
-    <div id="chart1" class="chart-container"></div>
-    <script>
-        const spec1 = {
-            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-            "description": "冒泡排序 30,000 整数 性能测试结果",
-            "title": {
-                "text": "bubble_sort - 编程语言性能对比",
-                "fontSize": 16,
-                "fontWeight": "bold"
-            },
-            "width": 800,
-            "height": 400,
-            "data": {
-                "values": [{"language": "C(GCC)", "time": 1523.0, "rank": 1},{"language": "C(Clang)", "time": 1550.0, "rank": 2},{"language": "Zig", "time": 1626.0, "rank": 3},{"language": "Go", "time": 1917.0, "rank": 4},{"language": "Java(JVM)", "time": 1967.0, "rank": 5},{"language": "Rust", "time": 2192.0, "rank": 6},{"language": "Java(GraalVM)", "time": 2291.0, "rank": 7},{"language": "Swift", "time": 2331.0, "rank": 8},{"language": "Dart(JIT)", "time": 2683.0, "rank": 9},{"language": "Dart(AOT)", "time": 3111.0, "rank": 10},{"language": "Lua(LuaJIT)", "time": 3120.0, "rank": 11},{"language": "JavaScript(Bun)", "time": 3707.0, "rank": 12},{"language": "Python(PyPy)", "time": 3869.0, "rank": 13},{"language": "JavaScript(Node.js)", "time": 6012.0, "rank": 14},{"language": "Lua", "time": 24891.0, "rank": 15},{"language": "Python(CPython)", "time": 70675.0, "rank": 16}]
-            },
-            "mark": {
-                "type": "bar",
-                "color": "#4c78a8",
-                "stroke": "#333",
-                "strokeWidth": 1,
-                "cornerRadius": 3
-            },
-            "encoding": {
-                "x": {
-                    "field": "language",
-                    "type": "nominal",
-                    "title": "编程语言",
-                    "sort": {"field": "time", "order": "ascending"},
-                    "axis": {
-                        "labelAngle": -45,
-                        "labelFontSize": 11
-                    }
-                },
-                "y": {
-                    "field": "time",
-                    "type": "quantitative", 
-                    "title": "执行时间 (毫秒) - 对数坐标",
-                    "scale": {"type": "sqrt"},
-                    "axis": {"labelFontSize": 11, "format": ".0f"}
-                },
-                "color": {
-                    "field": "rank",
-                    "type": "ordinal",
-                    "scale": {
-                        "range": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", 
-                                 "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
-                                 "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#c49c94"]
-                    },
-                    "legend": null
-                },
-                "tooltip": [
-                    {"field": "language", "type": "nominal", "title": "语言"},
-                    {"field": "time", "type": "quantitative", "title": "时间(ms)"},
-                    {"field": "rank", "type": "ordinal", "title": "排名"}
-                ]
-            },
-            "config": {
-                "axis": {
-                    "titleFontSize": 12,
-                    "titleFontWeight": "bold"
-                },
-                "title": {
-                    "anchor": "start",
-                    "offset": 20
-                }
-            }
-        };
-        
-        vegaEmbed('#chart1', spec1, {
-            "actions": false,
-            "renderer": "svg"
-        }).catch(console.error);
-    </script>
-
     <h2>📋 控制台输出</h2>
     <div class="console-output">
-        <pre>🚀 编程语言性能测试工具 v2.0 (YAML Config)
+        <pre>🚀 编程语言性能测试工具 v2.0 (YAML Config) (快速模式)
 ============================================================
 
 📊 配置信息:
   - 16 种编程语言
-  - 2 个测试用例
-  - 16 种语言已启用
-  - 2 个测试用例已启用
+  - 10 个测试用例
+  - 1 种语言已启用
+  - 1 个测试用例已启用
 
 ============================================================
-📊 测试结果汇总 (共 32 个结果)
+📊 测试结果汇总 (共 1 个结果)
 ============================================================
-📈 fib - Fibonacci 43 (递归算法)
+📈 fib - Fibonacci(递归算法)
 ------------------------------------------------------------
-🥇 Java(JVM)                   1359ms
-🥈 C(GCC)                      1586ms
-🥉 Zig                         1590ms
-4️⃣ C(Clang)                    1593ms
-5️⃣ Rust                        1594ms
-6️⃣ Go                          1731ms
-7️⃣ Java(GraalVM)               1996ms
-8️⃣ Swift                       2001ms
-9️⃣ JavaScript(Bun)             2548ms
-🔟 Dart(AOT)                   2798ms
-📍 Lua(LuaJIT)                 4098ms
-📍 JavaScript(Node.js)         4955ms
-📍 Python(PyPy)                5685ms
-📍 Dart(JIT)                   6749ms
-📍 Lua                        43250ms
-📍 Python(CPython)            74740ms
-
-📈 bubble_sort - 冒泡排序 30,000 整数
-------------------------------------------------------------
-🥇 C(GCC)                      1523ms
-🥈 C(Clang)                    1550ms
-🥉 Zig                         1626ms
-4️⃣ Go                          1917ms
-5️⃣ Java(JVM)                   1967ms
-6️⃣ Rust                        2192ms
-7️⃣ Java(GraalVM)               2291ms
-8️⃣ Swift                       2331ms
-9️⃣ Dart(JIT)                   2683ms
-🔟 Dart(AOT)                   3111ms
-📍 Lua(LuaJIT)                 3120ms
-📍 JavaScript(Bun)             3707ms
-📍 Python(PyPy)                3869ms
-📍 JavaScript(Node.js)         6012ms
-📍 Lua                        24891ms
-📍 Python(CPython)            70675ms
+🥇 C(GCC)                       141ms
 
 </pre>
     </div>

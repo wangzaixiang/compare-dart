@@ -5,12 +5,12 @@ fn bubbleSort(arr: []i32) void {
     const n = arr.len;
     var i: usize = 0;
     while (i < n - 1) : (i += 1) {
-        var j: usize = 0;
-        while (j < n - i - 1) : (j += 1) {
-            if (arr[j] > arr[j + 1]) {
+        var j: usize = i + 1;
+        while (j < n) : (j += 1) {
+            if (arr[i] > arr[j]) {
                 const temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
+                arr[j] = arr[i];
+                arr[i] = temp;
             }
         }
     }

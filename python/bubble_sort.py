@@ -5,9 +5,9 @@ import random
 def bubble_sort(arr):
     n = len(arr)
     for i in range(n - 1):
-        for j in range(n - i - 1):
-            if arr[j] > arr[j + 1]:
-                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+        for j in range(i + 1, n):
+            if arr[i] > arr[j]:
+                arr[i], arr[j] = arr[j], arr[i]
 
 def generate_array(n):
     random.seed(42)  # Fixed seed for reproducible results

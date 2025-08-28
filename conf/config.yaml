@@ -44,7 +44,7 @@ languages:
   # Dart 实现
   dart_aot:
     name: "Dart(AOT)"
-    src_template: "dart/{case}.dart
+    src_template: "dart/{case}.dart"
     compile_cmd: "dart compile exe dart/{case}.dart -o output/executables/{case}_dart"
     execute_cmd: "output/executables/{case}_dart"
     enabled: true
@@ -137,17 +137,82 @@ languages:
 test_cases:
   fib:
     name: "fib"
-    description: "Fibonacci 43 (递归算法)"
-    args_quick: 40
-    args: 43
+    description: "Fibonacci(递归算法)"
+    args_quick: 38
+    args: 42
     timeout_ms: 60000
     enabled: true
     
   bubble_sort:
     name: "bubble_sort"
-    description: "冒泡排序 30,000 整数"
-    args_quick: 1000
-    args: 40000
+    description: "冒泡排序"
+    args_quick: 8000
+    args: 35000
     timeout_ms: 30000
+    enabled: true
+
+  # 新增测试用例
+  mandelbrot:
+    name: "mandelbrot"
+    description: "曼德布洛特集合(浮点计算密集型)"
+    args_quick: 500
+    args: 2000
+    timeout_ms: 60000
+    enabled: true
+
+  quicksort:
+    name: "quicksort"
+    description: "快速排序(递归+数组操作)"
+    args_quick: 800000
+    args: 4000000
+    timeout_ms: 60000
+    enabled: true
+
+  prime_sieve:
+    name: "prime_sieve"
+    description: "埃拉托斯特尼筛法(循环+布尔数组)"
+    args_quick: 20000000
+    args: 200000000
+    timeout_ms: 60000
+    enabled: true
+
+  matrix_multiply:
+    name: "matrix_multiply"
+    description: "矩阵乘法(三重嵌套循环)"
+    args_quick: 200
+    args: 600
+    timeout_ms: 60000
+    enabled: true
+
+  binary_tree_traverse:
+    name: "binary_tree_traverse"
+    description: "二叉树遍历(递归+指针操作)"
+    args_quick: 17
+    args: 21
+    timeout_ms: 60000
+    enabled: true
+
+  counting_sort:
+    name: "counting_sort"
+    description: "计数排序(线性时间算法)"
+    args_quick: 20000000
+    args: 200000000
+    timeout_ms: 60000
+    enabled: true
+
+  string_reverse:
+    name: "string_reverse"
+    description: "字符串反转(双指针技术)"
+    args_quick: 100000000
+    args: 2000000000
+    timeout_ms: 60000
+    enabled: true
+
+  hanoi_tower:
+    name: "hanoi_tower"
+    description: "汉诺塔(指数级递归)"
+    args_quick: 24
+    args: 28
+    timeout_ms: 60000
     enabled: true
 

@@ -435,7 +435,7 @@ fn outputJson(allocator: std.mem.Allocator, results: []TestResult) !void {
 }
 
 // 生成控制台输出内容用于HTML报告
-fn generateConsoleOutput(allocator: std.mem.Allocator, results: []TestResult, config: *Config, enabled_langs: u32, enabled_cases: u32, use_quick_args: bool) ![]u8 {
+fn generateConsoleOutput(allocator: std.mem.Allocator, results: []TestResult, config: *Config, enabled_langs: u32, enabled_cases: u32, use_quick_args: bool, _: ?[]const u8, selected_case: ?[]const u8) ![]u8 {
     var output = try std.fmt.allocPrint(allocator,
         \\🚀 编程语言性能测试工具 v2.0 (YAML Config){s}
         \\============================================================
@@ -452,11 +452,17 @@ fn generateConsoleOutput(allocator: std.mem.Allocator, results: []TestResult, co
         \\
         , .{ if (use_quick_args) " (快速模式)" else "", config.languages.count(), config.test_cases.count(), enabled_langs, enabled_cases, results.len });
 
-    // 为每个测试用例生成排名
+    // 为每个测试用例生成排名（应用过滤器）
     var case_iterator = config.test_cases.iterator();
     while (case_iterator.next()) |case_entry| {
+        const case_key = case_entry.key_ptr.*;
         const case_config = case_entry.value_ptr.*;
         if (!case_config.enabled) continue;
+        
+        // 应用用例过滤器
+        if (selected_case) |filter_case| {
+            if (!std.mem.eql(u8, case_key, filter_case)) continue;
+        }
 
         const case_section = try std.fmt.allocPrint(allocator,
             \\📈 {s} - {s}
@@ -520,6 +526,230 @@ fn generateConsoleOutput(allocator: std.mem.Allocator, results: []TestResult, co
 
     return output;
 }
+
+fn outputHtml(allocator: std.mem.Allocator, results: []TestResult, config: *Config, console_output: []const u8, selected_case: ?[]const u8) !void {
+    // 生成 HTML 文件，包含 Vega-Lite 图表
+    var html_content = try std.fmt.allocPrint(allocator,
+        \\<!DOCTYPE html>
+        \\<html>
+        \\<head>
+        \\    <meta charset="UTF-8">
+        \\    <title>编程语言性能测试报告</title>
+        \\    <script src="https://cdn.jsdelivr.net/npm/vega@6"></script>
+        \\    <script src="https://cdn.jsdelivr.net/npm/vega-lite@6"></script>
+        \\    <script src="https://cdn.jsdelivr.net/npm/vega-embed@7"></script>
+        \\    <style>
+        \\        body {{ font-family: 'Microsoft YaHei', Arial, sans-serif; margin: 20px; }}
+        \\        h1 {{ color: #333; text-align: center; }}
+        \\        h2 {{ color: #666; border-bottom: 2px solid #ddd; padding-bottom: 10px; }}
+        \\        .chart-container {{ width: 100%; height: 500px; margin: 30px 0; page-break-inside: avoid; }}
+        \\        .summary {{ background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+        \\        .console-output {{ background: #2d2d2d; border-radius: 8px; padding: 20px; margin: 20px 0; overflow-x: auto; }}
+        \\        .console-output pre {{ color: #f8f8f2; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; font-size: 12px; line-height: 1.4; margin: 0; white-space: pre-wrap; }}
+        \\        @media print {{ 
+        \\            .chart-container {{ page-break-inside: avoid; height: 400px; }}
+        \\            .console-output {{ background: #f8f8f8; border: 1px solid #ddd; }}
+        \\            .console-output pre {{ color: #333; }}
+        \\            body {{ print-color-adjust: exact; }}
+        \\        }}
+        \\    </style>
+        \\</head>
+        \\<body>
+        \\    <h1>🚀 编程语言性能测试报告</h1>
+        \\    <div class="summary">
+        \\        <p><strong>测试时间:</strong> {d}</p>
+        \\        <p><strong>测试语言:</strong> {d} 种</p>
+        \\        <p><strong>测试用例:</strong> {d} 个</p>
+        \\    </div>
+        \\
+        , .{ std.time.timestamp(), config.languages.count(), config.test_cases.count() });
+
+    // 为每个测试用例生成图表（应用过滤器）
+    var case_iterator = config.test_cases.iterator();
+    var chart_index: u32 = 0;
+    
+    while (case_iterator.next()) |case_entry| {
+        const case_key = case_entry.key_ptr.*;
+        const case_config = case_entry.value_ptr.*;
+        if (!case_config.enabled) continue;
+        
+        // 应用用例过滤器
+        if (selected_case) |filter_case| {
+            if (!std.mem.eql(u8, case_key, filter_case)) continue;
+        }
+        
+        // 收集该用例的结果数据
+        var case_results: [100]TestResult = undefined;
+        var case_count: usize = 0;
+        
+        for (results) |result| {
+            if (std.mem.eql(u8, result.case, case_config.name)) {
+                case_results[case_count] = result;
+                case_count += 1;
+                if (case_count >= 100) break;
+            }
+        }
+        
+        // 按性能排序 (成功的结果)
+        for (0..case_count) |i| {
+            for (i + 1..case_count) |j| {
+                const should_swap = if (!case_results[i].success and case_results[j].success) 
+                    true 
+                else if (case_results[i].success and !case_results[j].success) 
+                    false 
+                else if (case_results[i].success and case_results[j].success) 
+                    case_results[i].time_ms > case_results[j].time_ms 
+                else 
+                    false;
+
+                if (should_swap) {
+                    const temp = case_results[i];
+                    case_results[i] = case_results[j];
+                    case_results[j] = temp;
+                }
+            }
+        }
+        
+        // 开始生成 Vega-Lite 图表
+        const chart_header = try std.fmt.allocPrint(allocator,
+            \\
+            \\    <h2>📊 {s} - {s}</h2>
+            \\    <div id="chart{d}" class="chart-container"></div>
+            \\    <script>
+            \\        const spec{d} = {{
+            \\            "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+            \\            "description": "{s} 性能测试结果",
+            \\            "title": {{
+            \\                "text": "{s} - 编程语言性能对比",
+            \\                "fontSize": 16,
+            \\                "fontWeight": "bold"
+            \\            }},
+            \\            "width": 800,
+            \\            "height": 400,
+            \\            "data": {{
+            \\                "values": [
+            , .{ case_config.name, case_config.description, chart_index, chart_index, case_config.description, case_config.name });
+        
+        const old_html = html_content;
+        html_content = try std.fmt.allocPrint(allocator, "{s}{s}", .{ old_html, chart_header });
+        
+        // 添加数据点 (对于对数坐标，将0值替换为0.1ms)
+        for (case_results[0..case_count], 0..) |result, i| {
+            if (!result.success) continue;
+            const comma = if (i > 0) "," else "";
+            const log_time = if (result.time_ms == 0) 0.1 else @as(f64, @floatFromInt(result.time_ms));
+            const data_point = try std.fmt.allocPrint(allocator, 
+                \\{s}{{"language": "{s}", "time": {d:.1}, "rank": {d}}}
+                , .{ comma, result.language, log_time, i + 1 });
+            const old_html2 = html_content;
+            html_content = try std.fmt.allocPrint(allocator, "{s}{s}", .{ old_html2, data_point });
+        }
+        
+        // 完成 Vega-Lite 规格
+        const chart_spec_end = try std.fmt.allocPrint(allocator,
+            \\]
+            \\            }},
+            \\            "mark": {{
+            \\                "type": "bar",
+            \\                "color": "#4c78a8",
+            \\                "stroke": "#333",
+            \\                "strokeWidth": 1,
+            \\                "cornerRadius": 3
+            \\            }},
+            \\            "encoding": {{
+            \\                "x": {{
+            \\                    "field": "language",
+            \\                    "type": "nominal",
+            \\                    "title": "编程语言",
+            \\                    "sort": {{"field": "time", "order": "ascending"}},
+            \\                    "axis": {{
+            \\                        "labelAngle": -45,
+            \\                        "labelFontSize": 11
+            \\                    }}
+            \\                }},
+            \\                "y": {{
+            \\                    "field": "time",
+            \\                    "type": "quantitative", 
+            \\                    "title": "执行时间 (毫秒) - 对数坐标",
+            \\                    "scale": {{"type": "sqrt"}},
+            \\                    "axis": {{"labelFontSize": 11, "format": ".0f"}}
+            \\                }},
+            \\                "color": {{
+            \\                    "field": "rank",
+            \\                    "type": "ordinal",
+            \\                    "scale": {{
+            \\                        "range": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", 
+            \\                                 "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+            \\                                 "#aec7e8", "#ffbb78", "#98df8a", "#ff9896", "#c5b0d5", "#c49c94"]
+            \\                    }},
+            \\                    "legend": null
+            \\                }},
+            \\                "tooltip": [
+            \\                    {{"field": "language", "type": "nominal", "title": "语言"}},
+            \\                    {{"field": "time", "type": "quantitative", "title": "时间(ms)"}},
+            \\                    {{"field": "rank", "type": "ordinal", "title": "排名"}}
+            \\                ]
+            \\            }},
+            \\            "config": {{
+            \\                "axis": {{
+            \\                    "titleFontSize": 12,
+            \\                    "titleFontWeight": "bold"
+            \\                }},
+            \\                "title": {{
+            \\                    "anchor": "start",
+            \\                    "offset": 20
+            \\                }}
+            \\            }}
+            \\        }};
+            \\        
+            \\        vegaEmbed('#chart{d}', spec{d}, {{
+            \\            "actions": false,
+            \\            "renderer": "svg"
+            \\        }}).catch(console.error);
+            \\    </script>
+            \\
+            , .{ chart_index, chart_index });
+        
+        const old_html3 = html_content;
+        html_content = try std.fmt.allocPrint(allocator, "{s}{s}", .{ old_html3, chart_spec_end });
+        
+        chart_index += 1;
+    }
+    
+    // 添加控制台输出部分
+    const console_section = try std.fmt.allocPrint(allocator,
+        \\
+        \\    <h2>📋 控制台输出</h2>
+        \\    <div class="console-output">
+        \\        <pre>{s}</pre>
+        \\    </div>
+        \\
+        , .{console_output});
+    
+    const old_html_with_console = html_content;
+    html_content = try std.fmt.allocPrint(allocator, "{s}{s}", .{ old_html_with_console, console_section });
+
+    // 完成 HTML 文档
+    const html_end = 
+        \\</body>
+        \\</html>
+        \\
+        ;
+    const final_html = try std.fmt.allocPrint(allocator, "{s}{s}", .{ html_content, html_end });
+    
+    // 写入 HTML 文件
+    std.fs.cwd().writeFile(.{ 
+        .sub_path = "output/results/bench_result.html", 
+        .data = final_html 
+    }) catch |err| {
+        print("Failed to write HTML file: {}\n", .{err});
+        return;
+    };
+    
+    print("✅ HTML报告已保存到 output/results/bench_result.html\n", .{});
+    
+}
+
 // 主函数
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -532,18 +762,46 @@ pub fn main() !void {
     const args = try std.process.argsAlloc(allocator);
 
     var use_quick_args = false;
-    for (args[1..]) |arg| {
+    var selected_lang: ?[]const u8 = null;
+    var selected_case: ?[]const u8 = null;
+    var show_help = false;
+    
+    var i: usize = 1;
+    while (i < args.len) {
+        const arg = args[i];
         if (std.mem.eql(u8, arg, "--quick")) {
             use_quick_args = true;
+        } else if (std.mem.eql(u8, arg, "--lang")) {
+            if (i + 1 < args.len) {
+                selected_lang = args[i + 1];
+                i += 1; // Skip next argument
+            } else {
+                print("❌ --lang 选项需要指定语言名称\n", .{});
+                print("用法: zig run run_bench.zig -- [--quick] [--lang <语言>] [--case <用例>]\n", .{});
+                return;
+            }
+        } else if (std.mem.eql(u8, arg, "--case")) {
+            if (i + 1 < args.len) {
+                selected_case = args[i + 1];
+                i += 1; // Skip next argument
+            } else {
+                print("❌ --case 选项需要指定测试用例名称\n", .{});
+                print("用法: zig run run_bench.zig -- [--quick] [--lang <语言>] [--case <用例>]\n", .{});
+                return;
+            }
+        } else if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
+            show_help = true;
         }
+        i += 1;
     }
 
-    const mode_text = if (use_quick_args) " (快速模式)" else "";
-    print("\n🚀 编程语言性能测试工具 v2.0 (YAML Config){s}\n", .{mode_text});
-    print("============================================================\n\n", .{});
-
     // 读取 YAML 配置文件
-    print("📖 读取配置文件...\n", .{});
+    if (!show_help) {
+        const mode_text = if (use_quick_args) " (快速模式)" else "";
+        print("\n🚀 编程语言性能测试工具 v2.0 (YAML Config){s}\n", .{mode_text});
+        print("============================================================\n\n", .{});
+        print("📖 读取配置文件...\n", .{});
+    }
     const config_content = std.fs.cwd().readFileAlloc(allocator, "conf/config.yaml", 1024 * 1024) catch |err| {
         print("❌ 无法读取配置文件 conf/config.yaml: {}\n", .{err});
         return;
@@ -556,6 +814,46 @@ pub fn main() !void {
         return;
     };
 
+    // 如果需要显示帮助信息，在配置加载后显示
+    if (show_help) {
+        print("🚀 编程语言性能测试工具 v2.0\n\n", .{});
+        print("用法: zig run run_bench.zig -- [选项]\n\n", .{});
+        print("选项:\n", .{});
+        print("  --quick              使用快速模式参数进行测试\n", .{});
+        print("  --lang <语言>        只测试指定的编程语言\n", .{});
+        print("  --case <用例>        只运行指定的测试用例\n", .{});
+        print("  --help, -h          显示此帮助信息\n\n", .{});
+        
+        // 显示可用的编程语言
+        print("可用的编程语言:\n", .{});
+        var lang_iterator = config.languages.iterator();
+        while (lang_iterator.next()) |entry| {
+            const lang_config = entry.value_ptr.*;
+            if (lang_config.enabled) {
+                print("  {s:<15} - {s}\n", .{ entry.key_ptr.*, lang_config.name });
+            }
+        }
+        print("\n", .{});
+        
+        // 显示可用的测试用例
+        print("可用的测试用例:\n", .{});
+        var case_iterator = config.test_cases.iterator();
+        while (case_iterator.next()) |entry| {
+            const case_config = entry.value_ptr.*;
+            if (case_config.enabled) {
+                print("  {s:<15} - {s}\n", .{ entry.key_ptr.*, case_config.description });
+            }
+        }
+        print("\n", .{});
+        
+        print("示例:\n", .{});
+        print("  zig run run_bench.zig -- --quick\n", .{});
+        print("  zig run run_bench.zig -- --lang rust\n", .{});
+        print("  zig run run_bench.zig -- --case fib\n", .{});
+        print("  zig run run_bench.zig -- --quick --lang java --case mandelbrot\n\n", .{});
+        return;
+    }
+
     // 创建输出目录
     std.fs.cwd().makePath("output/results") catch {};
     std.fs.cwd().makePath("output/executables") catch {};
@@ -564,21 +862,82 @@ pub fn main() !void {
     print("  - {} 种编程语言\n", .{config.languages.count()});
     print("  - {} 个测试用例\n", .{config.test_cases.count()});
     
-    // 统计启用的语言和测试用例数量
+    // 显示选择的语言和用例过滤器
+    if (selected_lang) |lang| {
+        print("  - 指定语言: {s}\n", .{lang});
+    }
+    if (selected_case) |case| {
+        print("  - 指定用例: {s}\n", .{case});
+    }
+    
+    // 统计启用的语言和测试用例数量（考虑过滤器）
     var enabled_langs: u32 = 0;
     var lang_iterator = config.languages.iterator();
     while (lang_iterator.next()) |entry| {
-        if (entry.value_ptr.enabled) enabled_langs += 1;
+        const lang_key = entry.key_ptr.*;
+        const lang_config = entry.value_ptr.*;
+        if (!lang_config.enabled) continue;
+        
+        // 应用语言过滤器
+        if (selected_lang) |filter_lang| {
+            if (!std.mem.eql(u8, lang_key, filter_lang)) continue;
+        }
+        
+        enabled_langs += 1;
     }
     
     var enabled_cases: u32 = 0;
     var case_iterator = config.test_cases.iterator();
     while (case_iterator.next()) |entry| {
-        if (entry.value_ptr.enabled) enabled_cases += 1;
+        const case_key = entry.key_ptr.*;
+        const case_config = entry.value_ptr.*;
+        if (!case_config.enabled) continue;
+        
+        // 应用用例过滤器
+        if (selected_case) |filter_case| {
+            if (!std.mem.eql(u8, case_key, filter_case)) continue;
+        }
+        
+        enabled_cases += 1;
     }
     
     print("  - {} 种语言已启用\n", .{enabled_langs});
     print("  - {} 个测试用例已启用\n\n", .{enabled_cases});
+    
+    // 检查是否有有效的测试组合
+    if (enabled_langs == 0) {
+        if (selected_lang) |lang| {
+            print("❌ 找不到指定的语言: {s}\n", .{lang});
+            print("可用的语言: ", .{});
+            lang_iterator = config.languages.iterator();
+            while (lang_iterator.next()) |entry| {
+                if (entry.value_ptr.enabled) {
+                    print("{s} ", .{entry.key_ptr.*});
+                }
+            }
+            print("\n", .{});
+        } else {
+            print("❌ 没有启用的语言\n", .{});
+        }
+        return;
+    }
+    
+    if (enabled_cases == 0) {
+        if (selected_case) |case| {
+            print("❌ 找不到指定的测试用例: {s}\n", .{case});
+            print("可用的测试用例: ", .{});
+            case_iterator = config.test_cases.iterator();
+            while (case_iterator.next()) |entry| {
+                if (entry.value_ptr.enabled) {
+                    print("{s} ", .{entry.key_ptr.*});
+                }
+            }
+            print("\n", .{});
+        } else {
+            print("❌ 没有启用的测试用例\n", .{});
+        }
+        return;
+    }
 
     const MAX_RESULTS = 1000;
     var results: [MAX_RESULTS]TestResult = undefined;
@@ -586,17 +945,29 @@ pub fn main() !void {
 
     print("🔧 开始编译和测试...\n", .{});
     
-    // 遍历所有启用的语言和测试用例
+    // 遍历所有启用的语言和测试用例（应用过滤器）
     lang_iterator = config.languages.iterator();
     while (lang_iterator.next()) |lang_entry| {
+        const lang_key = lang_entry.key_ptr.*;
         const lang_config = lang_entry.value_ptr.*;
         if (!lang_config.enabled) continue;
         
+        // 应用语言过滤器
+        if (selected_lang) |filter_lang| {
+            if (!std.mem.eql(u8, lang_key, filter_lang)) continue;
+        }
+        
         case_iterator = config.test_cases.iterator();
         while (case_iterator.next()) |case_entry| {
+            const case_key = case_entry.key_ptr.*;
             const case_config = case_entry.value_ptr.*;
             if (!case_config.enabled) continue;
             if (result_count >= MAX_RESULTS) break;
+            
+            // 应用用例过滤器
+            if (selected_case) |filter_case| {
+                if (!std.mem.eql(u8, case_key, filter_case)) continue;
+            }
             
             print("  测试 {s} ({s})... ", .{ lang_config.name, case_config.name });
             
@@ -632,11 +1003,17 @@ pub fn main() !void {
     print("📊 测试结果汇总 (共 {} 个结果)\n", .{result_count});
     print("============================================================\n\n", .{});
 
-    // 按用例分组显示结果
+    // 按用例分组显示结果（应用过滤器）
     case_iterator = config.test_cases.iterator();
     while (case_iterator.next()) |case_entry| {
+        const case_key = case_entry.key_ptr.*;
         const case_config = case_entry.value_ptr.*;
         if (!case_config.enabled) continue;
+        
+        // 应用用例过滤器
+        if (selected_case) |filter_case| {
+            if (!std.mem.eql(u8, case_key, filter_case)) continue;
+        }
         
         print("📈 {s} - {s}\n", .{ case_config.name, case_config.description });
         print("------------------------------------------------------------\n", .{});
@@ -653,21 +1030,21 @@ pub fn main() !void {
         }
 
         // 简单排序（成功的结果按时间排序，失败的排在后面）
-        for (0..case_count) |i| {
-            for (i + 1..case_count) |j| {
-                const should_swap = if (!case_results[i].success and case_results[j].success) 
+        for (0..case_count) |sort_i| {
+            for (sort_i + 1..case_count) |sort_j| {
+                const should_swap = if (!case_results[sort_i].success and case_results[sort_j].success) 
                     true 
-                else if (case_results[i].success and !case_results[j].success) 
+                else if (case_results[sort_i].success and !case_results[sort_j].success) 
                     false 
-                else if (case_results[i].success and case_results[j].success) 
-                    case_results[i].time_ms > case_results[j].time_ms 
+                else if (case_results[sort_i].success and case_results[sort_j].success) 
+                    case_results[sort_i].time_ms > case_results[sort_j].time_ms 
                 else 
                     false;
 
                 if (should_swap) {
-                    const temp = case_results[i];
-                    case_results[i] = case_results[j];
-                    case_results[j] = temp;
+                    const temp = case_results[sort_i];
+                    case_results[sort_i] = case_results[sort_j];
+                    case_results[sort_j] = temp;
                 }
             }
         }
@@ -675,9 +1052,9 @@ pub fn main() !void {
         // 显示排序结果
         const medals = [_][]const u8{ "🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟" };
         
-        for (case_results[0..case_count], 0..) |result, i| {
+        for (case_results[0..case_count], 0..) |result, rank_index| {
             if (result.success) {
-                const medal = if (i < medals.len) medals[i] else "📍";
+                const medal = if (rank_index < medals.len) medals[rank_index] else "📍";
                 print("{s} {s:<25} {d:>6}ms\n", .{ medal, result.language, result.time_ms });
             } else {
                 print("❌ {s:<25} 测试失败\n", .{result.language});
@@ -690,11 +1067,11 @@ pub fn main() !void {
     print("💾 保存测试结果...\n", .{});
     
     // 生成控制台输出内容
-    const console_output = try generateConsoleOutput(allocator, results[0..result_count], &config, enabled_langs, enabled_cases, use_quick_args);
-    _ = console_output; // autofix
+    const console_output = try generateConsoleOutput(allocator, results[0..result_count], &config, enabled_langs, enabled_cases, use_quick_args, selected_lang, selected_case);
     
     try outputCsv(allocator, results[0..result_count]);
     try outputJson(allocator, results[0..result_count]);
+    try outputHtml(allocator, results[0..result_count], &config, console_output, selected_case);
 
     print("\n🎉 测试完成！\n", .{});
     print("📁 结果文件保存在 output/results/ 目录下\n", .{});
