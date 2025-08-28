@@ -2,6 +2,26 @@
 
 本项目通过一些代码示例，来对比 C、Swift、Go、Dart、Java、Zig、Rust、Python、Lua 等编程语言的性能差异。
 
+## 测试语言：
+- C(gcc)
+- C(clang)
+- Swift
+- Go
+- Dart(JIT)
+- Dart(AOT)
+- Java(JVM)
+- Java(Graal Native)
+- Zig
+- Rust
+- Python(CPython)
+- Python(PyPy)
+- Lua
+- Lua(JIT)
+
+## 测试案例
+- fib 43 简单的递归计算 fibonacci 
+- bubble_sort 1000000 生成1M 个随机的整数，并使用 bubble sort 对其排序，只对比排序的耗时
+
 ## 可选依赖
 
 ### GraalVM Native Image
