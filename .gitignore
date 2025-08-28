@@ -1,0 +1,7 @@
+.zig-cache/
+.idea/
+*/fib
+java/fib_graal
+java/*.class
+output/executables/
+

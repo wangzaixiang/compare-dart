@@ -1,0 +1,153 @@
+# 编程语言性能测试配置文件
+# 使用 YAML 格式，支持注释和良好的可读性
+
+# 全局配置
+global:
+  output_dir: "output"
+  results_dir: "output/results" 
+  executables_dir: "output/executables"
+  default_timeout_ms: 30000
+  max_concurrent: 1
+
+# 编程语言配置
+languages:
+  # C 语言实现
+  gcc:
+    name: "C(GCC)"
+    src_template: "c/{case}.c"
+    compile_cmd: "gcc -O2 c/{case}.c -o output/executables/{case}_gcc"
+    execute_cmd: "output/executables/{case}_gcc"
+    enabled: true
+    
+  clang:
+    name: "C(Clang)"
+    src_template: "c/{case}.c"
+    compile_cmd: "clang -O2 c/{case}.c -o output/executables/{case}_clang"
+    execute_cmd: "output/executables/{case}_clang"
+    enabled: true
+
+  # Java 实现
+  java:
+    name: "Java(JVM)"
+    src_template: "java/{case}.java"
+    compile_cmd: "javac java/{case}.java -d output/executables/"
+    execute_cmd: "java -cp output/executables/ {case}"
+    enabled: true
+    
+  java_graal:
+    name: "Java(GraalVM)"
+    src_template: "java/{case}.java"
+    compile_cmd: "javac java/{case}.java && ([ output/executables/{case}_graal -nt java/{case}.java ] || native-image -cp java {case} output/executables/{case}_graal --no-fallback 2>/dev/null || echo 'GraalVM not available')"
+    execute_cmd: "output/executables/{case}_graal"
+    enabled: true  # 需要 GraalVM，默认禁用
+    
+  # Dart 实现
+  dart_aot:
+    name: "Dart(AOT)"
+    src_template: "dart/{case}.dart
+    compile_cmd: "dart compile exe dart/{case}.dart -o output/executables/{case}_dart"
+    execute_cmd: "output/executables/{case}_dart"
+    enabled: true
+    
+  dart_jit:
+    name: "Dart(JIT)"
+    src_template: "dart/{case}.dart"
+    compile_cmd: null  # 无需编译
+    execute_cmd: "dart dart/{case}.dart"
+    enabled: true
+
+  # Rust 实现
+  rust:
+    name: "Rust"
+    src_template: "rust/{case}.rs"
+    compile_cmd: "rustc -O rust/{case}.rs -o output/executables/{case}_rust"
+    execute_cmd: "output/executables/{case}_rust"
+    enabled: true
+
+  # Go 实现
+  go:
+    name: "Go"
+    src_template: "go/{case}.go"
+    compile_cmd: "go build -o output/executables/{case}_go go/{case}.go"
+    execute_cmd: "output/executables/{case}_go"
+    enabled: true
+
+  # Zig 实现
+  zig:
+    name: "Zig"
+    src_template: "zig/{case}.zig"
+    compile_cmd: "zig build-exe zig/{case}.zig -O ReleaseFast -femit-bin=output/executables/{case}_zig"
+    execute_cmd: "output/executables/{case}_zig"
+    enabled: true
+
+  # Swift 实现
+  swift:
+    name: "Swift"
+    src_template: "swift/{case}.swift"
+    compile_cmd: "swiftc -O swift/{case}.swift -o output/executables/{case}_swift 2>/dev/null || echo 'Swift not available'"
+    execute_cmd: "output/executables/{case}_swift"
+    enabled: true  # 需要 Swift 编译器，默认禁用
+
+  # JavaScript 实现
+  node:
+    name: "JavaScript(Node.js)"
+    src_template: "javascript/{case}.js"
+    compile_cmd: null  # 无需编译
+    execute_cmd: "node javascript/{case}.js"
+    enabled: true
+    
+  bun:
+    name: "JavaScript(Bun)"
+    src_template: "javascript/{case}.js"
+    compile_cmd: null
+    execute_cmd: "bun javascript/{case}.js"
+    enabled: true  # 需要安装 Bun，默认禁用
+
+  # Python 实现
+  python:
+    name: "Python(CPython)"
+    src_template: "python/{case}.py"
+    compile_cmd: null
+    execute_cmd: "python3 python/{case}.py"
+    enabled: true
+    
+  pypy:
+    name: "Python(PyPy)"
+    src_template: "python/{case}.py"
+    compile_cmd: null
+    execute_cmd: "pypy3 python/{case}.py"
+    enabled: true  # 需要安装 PyPy，默认禁用
+
+  # Lua 实现
+  lua:
+    name: "Lua"
+    src_template: "lua/{case}.lua"
+    compile_cmd: null
+    execute_cmd: "lua lua/{case}.lua"
+    enabled: true  # 需要安装 Lua，默认禁用
+    
+  luajit:
+    name: "Lua(LuaJIT)"
+    src_template: "lua/{case}.lua"
+    compile_cmd: null
+    execute_cmd: "luajit lua/{case}.lua"
+    enabled: true  # 需要安装 LuaJIT，默认禁用
+
+# 测试用例配置
+test_cases:
+  fib:
+    name: "fib"
+    description: "Fibonacci 43 (递归算法)"
+    args_quick: 40
+    args: 43
+    timeout_ms: 60000
+    enabled: true
+    
+  bubble_sort:
+    name: "bubble_sort"
+    description: "冒泡排序 30,000 整数"
+    args_quick: 1000
+    args: 40000
+    timeout_ms: 30000
+    enabled: true
+
