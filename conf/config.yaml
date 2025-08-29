@@ -109,7 +109,7 @@ languages:
     src_template: "python/{case}.py"
     compile_cmd: null
     execute_cmd: "python3 python/{case}.py"
-    enabled: true
+    enabled: false
     
   pypy:
     name: "Python(PyPy)"
@@ -124,7 +124,7 @@ languages:
     src_template: "lua/{case}.lua"
     compile_cmd: null
     execute_cmd: "lua lua/{case}.lua"
-    enabled: true  # 需要安装 Lua，默认禁用
+    enabled: false  # 需要安装 Lua，默认禁用
     
   luajit:
     name: "Lua(LuaJIT)"
@@ -206,7 +206,7 @@ test_cases:
     args_quick: 100000000
     args: 2000000000
     timeout_ms: 60000
-    enabled: true
+    enabled: false
 
   hanoi_tower:
     name: "hanoi_tower"
