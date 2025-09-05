@@ -314,6 +314,61 @@ fn runCommand(allocator: std.mem.Allocator, command: []const u8) !TestResult {
     return result;
 }
 
+// 生成时间戳字符串（ISO 8601格式：YYYY-MM-DDTHH:MM:SS）
+fn generateTimestamp(allocator: std.mem.Allocator) ![]u8 {
+    const timestamp = std.time.timestamp();
+    const epoch_seconds: u64 = @intCast(timestamp);
+    const days_since_epoch = epoch_seconds / 86400;
+    const seconds_today = epoch_seconds % 86400;
+    
+    // 计算年月日 (简化的算法，假设从1970年开始)
+    var year: u32 = 1970;
+    var days_remaining = days_since_epoch;
+    
+    // 简单计算年份（不考虑润年的精确计算）
+    while (days_remaining >= 365) {
+        const is_leap = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0);
+        const days_in_year: u32 = if (is_leap) 366 else 365;
+        if (days_remaining >= days_in_year) {
+            days_remaining -= days_in_year;
+            year += 1;
+        } else {
+            break;
+        }
+    }
+    
+    // 简化的月日计算
+    const days_in_months = [_]u32{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    var month: u32 = 1;
+    var day: u32 = 1;
+    
+    var days_left: u32 = @intCast(days_remaining);
+    for (days_in_months) |days_in_month| {
+        var actual_days_in_month = days_in_month;
+        if (month == 2) { // February
+            const is_leap = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0);
+            if (is_leap) actual_days_in_month = 29;
+        }
+        
+        if (days_left >= actual_days_in_month) {
+            days_left -= actual_days_in_month;
+            month += 1;
+        } else {
+            day = days_left + 1;
+            break;
+        }
+    }
+    
+    // 计算时分秒
+    const hour: u32 = @intCast(seconds_today / 3600);
+    const minute: u32 = @intCast((seconds_today % 3600) / 60);
+    const second: u32 = @intCast(seconds_today % 60);
+    
+    return try std.fmt.allocPrint(allocator, "{d:0>4}-{d:0>2}-{d:0>2}T{d:0>2}:{d:0>2}:{d:0>2}", .{
+        year, month, day, hour, minute, second
+    });
+}
+
 // 编译指定语言的测试用例
 fn compileCase(allocator: std.mem.Allocator, lang_config: LangConfig, case_name: []const u8) !TestResult {
     if (lang_config.compile_cmd == null) {
@@ -346,7 +401,7 @@ fn executeCase(allocator: std.mem.Allocator, lang_config: LangConfig, case_confi
 }
 
 // 输出 CSV 结果
-fn outputCsv(allocator: std.mem.Allocator, results: []TestResult) !void {
+fn outputCsv(allocator: std.mem.Allocator, results: []TestResult, timestamp: []const u8) !void {
     const csv_content = blk: {
         var content = try allocator.alloc(u8, 0);
         
@@ -373,26 +428,28 @@ fn outputCsv(allocator: std.mem.Allocator, results: []TestResult) !void {
         break :blk content;
     };
     
+    const filename = try std.fmt.allocPrint(allocator, "output/results/bench_result_{s}.csv", .{timestamp});
+    
     std.fs.cwd().writeFile(.{ 
-        .sub_path = "output/results/bench_result.csv", 
+        .sub_path = filename, 
         .data = csv_content 
     }) catch |err| {
         print("Failed to write CSV file: {}\n", .{err});
         return;
     };
     
-    print("✅ CSV结果已保存到 output/results/bench_result.csv\n", .{});
+    print("✅ CSV结果已保存到 {s}\n", .{filename});
 }
 
 // 输出 JSON 结果
-fn outputJson(allocator: std.mem.Allocator, results: []TestResult) !void {
-    const timestamp = std.time.timestamp();
+fn outputJson(allocator: std.mem.Allocator, results: []TestResult, timestamp: []const u8) !void {
+    const unix_timestamp = std.time.timestamp();
     
     var json_content = try std.fmt.allocPrint(allocator, 
         \\{{
         \\  "timestamp": "{d}",
         \\  "results": [
-        , .{timestamp});
+        , .{unix_timestamp});
     
     for (results, 0..) |result, i| {
         const comma = if (i > 0) "," else "";
@@ -423,19 +480,21 @@ fn outputJson(allocator: std.mem.Allocator, results: []TestResult) !void {
         \\
         , .{json_content});
     
+    const filename = try std.fmt.allocPrint(allocator, "output/results/bench_result_{s}.json", .{timestamp});
+    
     std.fs.cwd().writeFile(.{ 
-        .sub_path = "output/results/bench_result.json", 
+        .sub_path = filename, 
         .data = final_content 
     }) catch |err| {
         print("Failed to write JSON file: {}\n", .{err});
         return;
     };
     
-    print("✅ JSON结果已保存到 output/results/bench_result.json\n", .{});
+    print("✅ JSON结果已保存到 {s}\n", .{filename});
 }
 
 // 生成控制台输出内容用于HTML报告
-fn generateConsoleOutput(allocator: std.mem.Allocator, results: []TestResult, config: *Config, enabled_langs: u32, enabled_cases: u32, use_quick_args: bool, _: ?[]const u8, selected_case: ?[]const u8) ![]u8 {
+fn generateConsoleOutput(allocator: std.mem.Allocator, results: []TestResult, config: *Config, enabled_langs: u32, enabled_cases: u32, use_quick_args: bool, _: [][]const u8, selected_cases: [][]const u8) ![]u8 {
     var output = try std.fmt.allocPrint(allocator,
         \\🚀 编程语言性能测试工具 v2.0 (YAML Config){s}
         \\============================================================
@@ -457,11 +516,19 @@ fn generateConsoleOutput(allocator: std.mem.Allocator, results: []TestResult, co
     while (case_iterator.next()) |case_entry| {
         const case_key = case_entry.key_ptr.*;
         const case_config = case_entry.value_ptr.*;
-        if (!case_config.enabled) continue;
         
         // 应用用例过滤器
-        if (selected_case) |filter_case| {
-            if (!std.mem.eql(u8, case_key, filter_case)) continue;
+        if (selected_cases.len > 0) {
+            var found = false;
+            for (selected_cases) |filter_case| {
+                if (std.mem.eql(u8, case_key, filter_case)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) continue;
+        } else {
+            if (!case_config.enabled) continue;
         }
 
         const case_section = try std.fmt.allocPrint(allocator,
@@ -527,7 +594,7 @@ fn generateConsoleOutput(allocator: std.mem.Allocator, results: []TestResult, co
     return output;
 }
 
-fn outputHtml(allocator: std.mem.Allocator, results: []TestResult, config: *Config, console_output: []const u8, selected_case: ?[]const u8) !void {
+fn outputHtml(allocator: std.mem.Allocator, results: []TestResult, config: *Config, console_output: []const u8, selected_cases: [][]const u8, timestamp: []const u8) !void {
     // 生成 HTML 文件，包含 Vega-Lite 图表
     var html_content = try std.fmt.allocPrint(allocator,
         \\<!DOCTYPE html>
@@ -571,11 +638,19 @@ fn outputHtml(allocator: std.mem.Allocator, results: []TestResult, config: *Conf
     while (case_iterator.next()) |case_entry| {
         const case_key = case_entry.key_ptr.*;
         const case_config = case_entry.value_ptr.*;
-        if (!case_config.enabled) continue;
         
         // 应用用例过滤器
-        if (selected_case) |filter_case| {
-            if (!std.mem.eql(u8, case_key, filter_case)) continue;
+        if (selected_cases.len > 0) {
+            var found = false;
+            for (selected_cases) |filter_case| {
+                if (std.mem.eql(u8, case_key, filter_case)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) continue;
+        } else {
+            if (!case_config.enabled) continue;
         }
         
         // 收集该用例的结果数据
@@ -738,16 +813,39 @@ fn outputHtml(allocator: std.mem.Allocator, results: []TestResult, config: *Conf
     const final_html = try std.fmt.allocPrint(allocator, "{s}{s}", .{ html_content, html_end });
     
     // 写入 HTML 文件
+    const filename = try std.fmt.allocPrint(allocator, "output/results/bench_result_{s}.html", .{timestamp});
+    
     std.fs.cwd().writeFile(.{ 
-        .sub_path = "output/results/bench_result.html", 
+        .sub_path = filename, 
         .data = final_html 
     }) catch |err| {
         print("Failed to write HTML file: {}\n", .{err});
         return;
     };
     
-    print("✅ HTML报告已保存到 output/results/bench_result.html\n", .{});
+    print("✅ HTML报告已保存到 {s}\n", .{filename});
     
+}
+
+// 解析逗号分隔的字符串并添加到ArrayList
+fn parseCommaSeparated(allocator: std.mem.Allocator, list: *std.ArrayList([]const u8), value: []const u8) !void {
+    var items = std.mem.splitSequence(u8, value, ",");
+    while (items.next()) |item| {
+        const trimmed = std.mem.trim(u8, item, " \t");
+        if (trimmed.len > 0) {
+            try list.append(allocator, try allocator.dupe(u8, trimmed));
+        }
+    }
+}
+
+// 检查值是否在列表中
+fn isInList(list: std.ArrayList([]const u8), value: []const u8) bool {
+    for (list.items) |item| {
+        if (std.mem.eql(u8, item, value)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 // 主函数
@@ -762,8 +860,10 @@ pub fn main() !void {
     const args = try std.process.argsAlloc(allocator);
 
     var use_quick_args = false;
-    var selected_lang: ?[]const u8 = null;
-    var selected_case: ?[]const u8 = null;
+    var selected_langs = try std.ArrayList([]const u8).initCapacity(allocator, 0);
+    defer selected_langs.deinit(allocator);
+    var selected_cases = try std.ArrayList([]const u8).initCapacity(allocator, 0);
+    defer selected_cases.deinit(allocator);
     var show_help = false;
     
     var i: usize = 1;
@@ -773,20 +873,20 @@ pub fn main() !void {
             use_quick_args = true;
         } else if (std.mem.eql(u8, arg, "--lang")) {
             if (i + 1 < args.len) {
-                selected_lang = args[i + 1];
+                try parseCommaSeparated(allocator, &selected_langs, args[i + 1]);
                 i += 1; // Skip next argument
             } else {
                 print("❌ --lang 选项需要指定语言名称\n", .{});
-                print("用法: zig run run_bench.zig -- [--quick] [--lang <语言>] [--case <用例>]\n", .{});
+                print("用法: zig run run_bench.zig -- [--quick] [--lang <语言1,语言2>] [--case <用例1,用例2>]\n", .{});
                 return;
             }
         } else if (std.mem.eql(u8, arg, "--case")) {
             if (i + 1 < args.len) {
-                selected_case = args[i + 1];
+                try parseCommaSeparated(allocator, &selected_cases, args[i + 1]);
                 i += 1; // Skip next argument
             } else {
                 print("❌ --case 选项需要指定测试用例名称\n", .{});
-                print("用法: zig run run_bench.zig -- [--quick] [--lang <语言>] [--case <用例>]\n", .{});
+                print("用法: zig run run_bench.zig -- [--quick] [--lang <语言1,语言2>] [--case <用例1,用例2>]\n", .{});
                 return;
             }
         } else if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
@@ -819,10 +919,10 @@ pub fn main() !void {
         print("🚀 编程语言性能测试工具 v2.0\n\n", .{});
         print("用法: zig run run_bench.zig -- [选项]\n\n", .{});
         print("选项:\n", .{});
-        print("  --quick              使用快速模式参数进行测试\n", .{});
-        print("  --lang <语言>        只测试指定的编程语言\n", .{});
-        print("  --case <用例>        只运行指定的测试用例\n", .{});
-        print("  --help, -h          显示此帮助信息\n\n", .{});
+        print("  --quick                    使用快速模式参数进行测试\n", .{});
+        print("  --lang <语言1,语言2,...>   只测试指定的编程语言（支持多个，用逗号分隔）\n", .{});
+        print("  --case <用例1,用例2,...>   只运行指定的测试用例（支持多个，用逗号分隔，忽略enabled设置）\n", .{});
+        print("  --help, -h                显示此帮助信息\n\n", .{});
         
         // 显示可用的编程语言
         print("可用的编程语言:\n", .{});
@@ -849,8 +949,10 @@ pub fn main() !void {
         print("示例:\n", .{});
         print("  zig run run_bench.zig -- --quick\n", .{});
         print("  zig run run_bench.zig -- --lang rust\n", .{});
+        print("  zig run run_bench.zig -- --lang java,rust,go\n", .{});
         print("  zig run run_bench.zig -- --case fib\n", .{});
-        print("  zig run run_bench.zig -- --quick --lang java --case mandelbrot\n\n", .{});
+        print("  zig run run_bench.zig -- --case fib,bubble_sort\n", .{});
+        print("  zig run run_bench.zig -- --quick --lang java,python --case mandelbrot,fib\n\n", .{});
         return;
     }
 
@@ -863,11 +965,21 @@ pub fn main() !void {
     print("  - {} 个测试用例\n", .{config.test_cases.count()});
     
     // 显示选择的语言和用例过滤器
-    if (selected_lang) |lang| {
-        print("  - 指定语言: {s}\n", .{lang});
+    if (selected_langs.items.len > 0) {
+        print("  - 指定语言: ", .{});
+        for (selected_langs.items, 0..) |lang, idx| {
+            if (idx > 0) print(", ", .{});
+            print("{s}", .{lang});
+        }
+        print("\n", .{});
     }
-    if (selected_case) |case| {
-        print("  - 指定用例: {s}\n", .{case});
+    if (selected_cases.items.len > 0) {
+        print("  - 指定用例: ", .{});
+        for (selected_cases.items, 0..) |case, idx| {
+            if (idx > 0) print(", ", .{});
+            print("{s}", .{case});
+        }
+        print("\n", .{});
     }
     
     // 统计启用的语言和测试用例数量（考虑过滤器）
@@ -876,11 +988,14 @@ pub fn main() !void {
     while (lang_iterator.next()) |entry| {
         const lang_key = entry.key_ptr.*;
         const lang_config = entry.value_ptr.*;
-        if (!lang_config.enabled) continue;
         
         // 应用语言过滤器
-        if (selected_lang) |filter_lang| {
-            if (!std.mem.eql(u8, lang_key, filter_lang)) continue;
+        if (selected_langs.items.len > 0) {
+            if (!isInList(selected_langs, lang_key)) continue;
+            // 当指定 --lang 时，忽略 enabled 状态
+        } else {
+            // 未指定 --lang 时，只统计启用的语言
+            if (!lang_config.enabled) continue;
         }
         
         enabled_langs += 1;
@@ -891,11 +1006,14 @@ pub fn main() !void {
     while (case_iterator.next()) |entry| {
         const case_key = entry.key_ptr.*;
         const case_config = entry.value_ptr.*;
-        if (!case_config.enabled) continue;
         
         // 应用用例过滤器
-        if (selected_case) |filter_case| {
-            if (!std.mem.eql(u8, case_key, filter_case)) continue;
+        if (selected_cases.items.len > 0) {
+            if (!isInList(selected_cases, case_key)) continue;
+            // 当指定 --case 时，忽略 enabled 状态
+        } else {
+            // 未指定 --case 时，只统计启用的用例
+            if (!case_config.enabled) continue;
         }
         
         enabled_cases += 1;
@@ -906,14 +1024,16 @@ pub fn main() !void {
     
     // 检查是否有有效的测试组合
     if (enabled_langs == 0) {
-        if (selected_lang) |lang| {
-            print("❌ 找不到指定的语言: {s}\n", .{lang});
-            print("可用的语言: ", .{});
+        if (selected_langs.items.len > 0) {
+            print("❌ 找不到指定的语言: ", .{});
+            for (selected_langs.items, 0..) |lang, idx| {
+                if (idx > 0) print(", ", .{});
+                print("{s}", .{lang});
+            }
+            print("\n可用的语言: ", .{});
             lang_iterator = config.languages.iterator();
             while (lang_iterator.next()) |entry| {
-                if (entry.value_ptr.enabled) {
-                    print("{s} ", .{entry.key_ptr.*});
-                }
+                print("{s} ", .{entry.key_ptr.*});
             }
             print("\n", .{});
         } else {
@@ -923,14 +1043,16 @@ pub fn main() !void {
     }
     
     if (enabled_cases == 0) {
-        if (selected_case) |case| {
-            print("❌ 找不到指定的测试用例: {s}\n", .{case});
-            print("可用的测试用例: ", .{});
+        if (selected_cases.items.len > 0) {
+            print("❌ 找不到指定的测试用例: ", .{});
+            for (selected_cases.items, 0..) |case, idx| {
+                if (idx > 0) print(", ", .{});
+                print("{s}", .{case});
+            }
+            print("\n可用的测试用例: ", .{});
             case_iterator = config.test_cases.iterator();
             while (case_iterator.next()) |entry| {
-                if (entry.value_ptr.enabled) {
-                    print("{s} ", .{entry.key_ptr.*});
-                }
+                print("{s} ", .{entry.key_ptr.*});
             }
             print("\n", .{});
         } else {
@@ -950,23 +1072,29 @@ pub fn main() !void {
     while (lang_iterator.next()) |lang_entry| {
         const lang_key = lang_entry.key_ptr.*;
         const lang_config = lang_entry.value_ptr.*;
-        if (!lang_config.enabled) continue;
         
         // 应用语言过滤器
-        if (selected_lang) |filter_lang| {
-            if (!std.mem.eql(u8, lang_key, filter_lang)) continue;
+        if (selected_langs.items.len > 0) {
+            if (!isInList(selected_langs, lang_key)) continue;
+            // 当指定 --lang 时，忽略 enabled 状态
+        } else {
+            // 未指定 --lang 时，只执行启用的语言
+            if (!lang_config.enabled) continue;
         }
         
         case_iterator = config.test_cases.iterator();
         while (case_iterator.next()) |case_entry| {
             const case_key = case_entry.key_ptr.*;
             const case_config = case_entry.value_ptr.*;
-            if (!case_config.enabled) continue;
             if (result_count >= MAX_RESULTS) break;
             
             // 应用用例过滤器
-            if (selected_case) |filter_case| {
-                if (!std.mem.eql(u8, case_key, filter_case)) continue;
+            if (selected_cases.items.len > 0) {
+                if (!isInList(selected_cases, case_key)) continue;
+                // 当指定 --case 时，忽略 enabled 状态
+            } else {
+                // 未指定 --case 时，只执行启用的用例
+                if (!case_config.enabled) continue;
             }
             
             print("  测试 {s} ({s})... ", .{ lang_config.name, case_config.name });
@@ -1008,11 +1136,14 @@ pub fn main() !void {
     while (case_iterator.next()) |case_entry| {
         const case_key = case_entry.key_ptr.*;
         const case_config = case_entry.value_ptr.*;
-        if (!case_config.enabled) continue;
         
         // 应用用例过滤器
-        if (selected_case) |filter_case| {
-            if (!std.mem.eql(u8, case_key, filter_case)) continue;
+        if (selected_cases.items.len > 0) {
+            if (!isInList(selected_cases, case_key)) continue;
+            // 当指定 --case 时，忽略 enabled 状态
+        } else {
+            // 未指定 --case 时，只显示启用的用例
+            if (!case_config.enabled) continue;
         }
         
         print("📈 {s} - {s}\n", .{ case_config.name, case_config.description });
@@ -1066,12 +1197,15 @@ pub fn main() !void {
     // 输出结果文件
     print("💾 保存测试结果...\n", .{});
     
-    // 生成控制台输出内容
-    const console_output = try generateConsoleOutput(allocator, results[0..result_count], &config, enabled_langs, enabled_cases, use_quick_args, selected_lang, selected_case);
+    // 生成一致的时间戳供所有文件使用
+    const timestamp = try generateTimestamp(allocator);
     
-    try outputCsv(allocator, results[0..result_count]);
-    try outputJson(allocator, results[0..result_count]);
-    try outputHtml(allocator, results[0..result_count], &config, console_output, selected_case);
+    // 生成控制台输出内容
+    const console_output = try generateConsoleOutput(allocator, results[0..result_count], &config, enabled_langs, enabled_cases, use_quick_args, selected_langs.items, selected_cases.items);
+    
+    try outputCsv(allocator, results[0..result_count], timestamp);
+    try outputJson(allocator, results[0..result_count], timestamp);
+    try outputHtml(allocator, results[0..result_count], &config, console_output, selected_cases.items, timestamp);
 
     print("\n🎉 测试完成！\n", .{});
     print("📁 结果文件保存在 output/results/ 目录下\n", .{});

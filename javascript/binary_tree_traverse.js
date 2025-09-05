@@ -25,16 +25,19 @@ function traverseInOrder(node) {
     return sum;
 }
 
-const args = process.argv.slice(2);
+// 兼容 Node.js 和 QuickJS
+const args = typeof process !== 'undefined' ? process.argv.slice(2) : scriptArgs.slice(1);
 if (args.length < 1) {
     console.log('Usage: binary_tree_traverse <depth>');
-    process.exit(1);
+    if (typeof process !== 'undefined') process.exit(1);
+    else throw new Error('Usage error');
 }
 
 const depth = parseInt(args[0]);
 if (isNaN(depth)) {
     console.log('Invalid number:', args[0]);
-    process.exit(1);
+    if (typeof process !== 'undefined') process.exit(1);
+    else throw new Error('Usage error');
 }
 
 const counter = [0];

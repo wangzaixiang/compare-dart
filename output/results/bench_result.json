@@ -1,760 +1,88 @@
 {
-  "timestamp": "1756455476",
+  "timestamp": "1757064285",
   "results": [
     {
       "language": "JavaScript(Node.js)",
-      "case": "mandelbrot",
-      "time_ms": 281,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Node.js)",
-      "case": "quicksort",
-      "time_ms": 1211,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Node.js)",
-      "case": "prime_sieve",
-      "time_ms": 3076,
-      "success": false
-    },
-    {
-      "language": "JavaScript(Node.js)",
-      "case": "bubble_sort",
-      "time_ms": 2618,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Node.js)",
-      "case": "matrix_multiply",
-      "time_ms": 802,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Node.js)",
       "case": "fib",
-      "time_ms": 3051,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Node.js)",
-      "case": "binary_tree_traverse",
-      "time_ms": 77,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Node.js)",
-      "case": "counting_sort",
-      "time_ms": 4177,
-      "success": false
-    },
-    {
-      "language": "JavaScript(Node.js)",
-      "case": "hanoi_tower",
-      "time_ms": 1017,
-      "success": true
-    },
-    {
-      "language": "C(GCC)",
-      "case": "mandelbrot",
-      "time_ms": 241,
-      "success": true
-    },
-    {
-      "language": "C(GCC)",
-      "case": "quicksort",
-      "time_ms": 524,
-      "success": true
-    },
-    {
-      "language": "C(GCC)",
-      "case": "prime_sieve",
-      "time_ms": 1189,
-      "success": true
-    },
-    {
-      "language": "C(GCC)",
-      "case": "bubble_sort",
-      "time_ms": 1166,
-      "success": true
-    },
-    {
-      "language": "C(GCC)",
-      "case": "matrix_multiply",
-      "time_ms": 209,
+      "time_ms": 2591,
       "success": true
     },
     {
       "language": "C(GCC)",
       "case": "fib",
-      "time_ms": 982,
-      "success": true
-    },
-    {
-      "language": "C(GCC)",
-      "case": "binary_tree_traverse",
-      "time_ms": 82,
-      "success": true
-    },
-    {
-      "language": "C(GCC)",
-      "case": "counting_sort",
-      "time_ms": 388,
-      "success": true
-    },
-    {
-      "language": "C(GCC)",
-      "case": "hanoi_tower",
-      "time_ms": 531,
-      "success": true
-    },
-    {
-      "language": "C(Clang)",
-      "case": "mandelbrot",
-      "time_ms": 233,
-      "success": true
-    },
-    {
-      "language": "C(Clang)",
-      "case": "quicksort",
-      "time_ms": 522,
-      "success": true
-    },
-    {
-      "language": "C(Clang)",
-      "case": "prime_sieve",
-      "time_ms": 1597,
-      "success": true
-    },
-    {
-      "language": "C(Clang)",
-      "case": "bubble_sort",
-      "time_ms": 1166,
-      "success": true
-    },
-    {
-      "language": "C(Clang)",
-      "case": "matrix_multiply",
-      "time_ms": 201,
+      "time_ms": 834,
       "success": true
     },
     {
       "language": "C(Clang)",
       "case": "fib",
-      "time_ms": 977,
-      "success": true
-    },
-    {
-      "language": "C(Clang)",
-      "case": "binary_tree_traverse",
-      "time_ms": 78,
-      "success": true
-    },
-    {
-      "language": "C(Clang)",
-      "case": "counting_sort",
-      "time_ms": 384,
-      "success": true
-    },
-    {
-      "language": "C(Clang)",
-      "case": "hanoi_tower",
-      "time_ms": 534,
-      "success": true
-    },
-    {
-      "language": "Java(GraalVM)",
-      "case": "mandelbrot",
-      "time_ms": 283,
-      "success": true
-    },
-    {
-      "language": "Java(GraalVM)",
-      "case": "quicksort",
-      "time_ms": 1002,
-      "success": true
-    },
-    {
-      "language": "Java(GraalVM)",
-      "case": "prime_sieve",
-      "time_ms": 1394,
-      "success": true
-    },
-    {
-      "language": "Java(GraalVM)",
-      "case": "bubble_sort",
-      "time_ms": 1217,
-      "success": true
-    },
-    {
-      "language": "Java(GraalVM)",
-      "case": "matrix_multiply",
-      "time_ms": 218,
+      "time_ms": 831,
       "success": true
     },
     {
       "language": "Java(GraalVM)",
       "case": "fib",
-      "time_ms": 1225,
-      "success": true
-    },
-    {
-      "language": "Java(GraalVM)",
-      "case": "binary_tree_traverse",
-      "time_ms": 123,
-      "success": true
-    },
-    {
-      "language": "Java(GraalVM)",
-      "case": "counting_sort",
-      "time_ms": 852,
-      "success": true
-    },
-    {
-      "language": "Java(GraalVM)",
-      "case": "hanoi_tower",
-      "time_ms": 664,
-      "success": true
-    },
-    {
-      "language": "Go",
-      "case": "mandelbrot",
-      "time_ms": 275,
-      "success": true
-    },
-    {
-      "language": "Go",
-      "case": "quicksort",
-      "time_ms": 709,
-      "success": true
-    },
-    {
-      "language": "Go",
-      "case": "prime_sieve",
-      "time_ms": 934,
-      "success": true
-    },
-    {
-      "language": "Go",
-      "case": "bubble_sort",
-      "time_ms": 1167,
-      "success": true
-    },
-    {
-      "language": "Go",
-      "case": "matrix_multiply",
-      "time_ms": 716,
+      "time_ms": 1071,
       "success": true
     },
     {
       "language": "Go",
       "case": "fib",
-      "time_ms": 1065,
-      "success": true
-    },
-    {
-      "language": "Go",
-      "case": "binary_tree_traverse",
-      "time_ms": 64,
-      "success": true
-    },
-    {
-      "language": "Go",
-      "case": "counting_sort",
-      "time_ms": 645,
-      "success": true
-    },
-    {
-      "language": "Go",
-      "case": "hanoi_tower",
-      "time_ms": 658,
-      "success": true
-    },
-    {
-      "language": "Python(PyPy)",
-      "case": "mandelbrot",
-      "time_ms": 520,
-      "success": true
-    },
-    {
-      "language": "Python(PyPy)",
-      "case": "quicksort",
-      "time_ms": 5169,
-      "success": true
-    },
-    {
-      "language": "Python(PyPy)",
-      "case": "prime_sieve",
-      "time_ms": 4120,
-      "success": true
-    },
-    {
-      "language": "Python(PyPy)",
-      "case": "bubble_sort",
-      "time_ms": 2218,
-      "success": true
-    },
-    {
-      "language": "Python(PyPy)",
-      "case": "matrix_multiply",
-      "time_ms": 1036,
+      "time_ms": 937,
       "success": true
     },
     {
       "language": "Python(PyPy)",
       "case": "fib",
-      "time_ms": 7618,
+      "time_ms": 6489,
       "success": true
     },
     {
-      "language": "Python(PyPy)",
-      "case": "binary_tree_traverse",
-      "time_ms": 348,
+      "language": "Lua(LuaJIT)",
+      "case": "fib",
+      "time_ms": 2122,
       "success": true
     },
     {
-      "language": "Python(PyPy)",
-      "case": "counting_sort",
+      "language": "Java(JVM)",
+      "case": "fib",
+      "time_ms": 730,
+      "success": true
+    },
+    {
+      "language": "Rust",
+      "case": "fib",
+      "time_ms": 832,
+      "success": true
+    },
+    {
+      "language": "JavaScript(Bun)",
+      "case": "fib",
+      "time_ms": 1344,
+      "success": true
+    },
+    {
+      "language": "Zig",
+      "case": "fib",
+      "time_ms": 831,
+      "success": true
+    },
+    {
+      "language": "Swift",
+      "case": "fib",
+      "time_ms": 1066,
+      "success": true
+    },
+    {
+      "language": "Dart(AOT)",
+      "case": "fib",
       "time_ms": 1451,
       "success": true
     },
     {
-      "language": "Python(PyPy)",
-      "case": "hanoi_tower",
-      "time_ms": 613,
-      "success": true
-    },
-    {
-      "language": "Lua(LuaJIT)",
-      "case": "mandelbrot",
-      "time_ms": 318,
-      "success": true
-    },
-    {
-      "language": "Lua(LuaJIT)",
-      "case": "quicksort",
-      "time_ms": 3138,
-      "success": true
-    },
-    {
-      "language": "Lua(LuaJIT)",
-      "case": "prime_sieve",
-      "time_ms": 54526,
-      "success": true
-    },
-    {
-      "language": "Lua(LuaJIT)",
-      "case": "bubble_sort",
-      "time_ms": 2228,
-      "success": true
-    },
-    {
-      "language": "Lua(LuaJIT)",
-      "case": "matrix_multiply",
-      "time_ms": 850,
-      "success": true
-    },
-    {
-      "language": "Lua(LuaJIT)",
-      "case": "fib",
-      "time_ms": 2449,
-      "success": true
-    },
-    {
-      "language": "Lua(LuaJIT)",
-      "case": "binary_tree_traverse",
-      "time_ms": 193,
-      "success": true
-    },
-    {
-      "language": "Lua(LuaJIT)",
-      "case": "counting_sort",
-      "time_ms": 76549,
-      "success": true
-    },
-    {
-      "language": "Lua(LuaJIT)",
-      "case": "hanoi_tower",
-      "time_ms": 1089,
-      "success": true
-    },
-    {
-      "language": "Java(JVM)",
-      "case": "mandelbrot",
-      "time_ms": 337,
-      "success": true
-    },
-    {
-      "language": "Java(JVM)",
-      "case": "quicksort",
-      "time_ms": 863,
-      "success": true
-    },
-    {
-      "language": "Java(JVM)",
-      "case": "prime_sieve",
-      "time_ms": 1355,
-      "success": true
-    },
-    {
-      "language": "Java(JVM)",
-      "case": "bubble_sort",
-      "time_ms": 1158,
-      "success": true
-    },
-    {
-      "language": "Java(JVM)",
-      "case": "matrix_multiply",
-      "time_ms": 244,
-      "success": true
-    },
-    {
-      "language": "Java(JVM)",
-      "case": "fib",
-      "time_ms": 846,
-      "success": true
-    },
-    {
-      "language": "Java(JVM)",
-      "case": "binary_tree_traverse",
-      "time_ms": 47,
-      "success": true
-    },
-    {
-      "language": "Java(JVM)",
-      "case": "counting_sort",
-      "time_ms": 699,
-      "success": true
-    },
-    {
-      "language": "Java(JVM)",
-      "case": "hanoi_tower",
-      "time_ms": 501,
-      "success": true
-    },
-    {
-      "language": "Rust",
-      "case": "mandelbrot",
-      "time_ms": 294,
-      "success": true
-    },
-    {
-      "language": "Rust",
-      "case": "quicksort",
-      "time_ms": 674,
-      "success": true
-    },
-    {
-      "language": "Rust",
-      "case": "prime_sieve",
-      "time_ms": 1096,
-      "success": true
-    },
-    {
-      "language": "Rust",
-      "case": "bubble_sort",
-      "time_ms": 1114,
-      "success": true
-    },
-    {
-      "language": "Rust",
-      "case": "matrix_multiply",
-      "time_ms": 734,
-      "success": true
-    },
-    {
-      "language": "Rust",
-      "case": "fib",
-      "time_ms": 989,
-      "success": true
-    },
-    {
-      "language": "Rust",
-      "case": "binary_tree_traverse",
-      "time_ms": 53,
-      "success": true
-    },
-    {
-      "language": "Rust",
-      "case": "counting_sort",
-      "time_ms": 404,
-      "success": true
-    },
-    {
-      "language": "Rust",
-      "case": "hanoi_tower",
-      "time_ms": 535,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Bun)",
-      "case": "mandelbrot",
-      "time_ms": 349,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Bun)",
-      "case": "quicksort",
-      "time_ms": 1178,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Bun)",
-      "case": "prime_sieve",
-      "time_ms": 3804,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Bun)",
-      "case": "bubble_sort",
-      "time_ms": 2265,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Bun)",
-      "case": "matrix_multiply",
-      "time_ms": 625,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Bun)",
-      "case": "fib",
-      "time_ms": 1621,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Bun)",
-      "case": "binary_tree_traverse",
-      "time_ms": 68,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Bun)",
-      "case": "counting_sort",
-      "time_ms": 99668,
-      "success": true
-    },
-    {
-      "language": "JavaScript(Bun)",
-      "case": "hanoi_tower",
-      "time_ms": 896,
-      "success": true
-    },
-    {
-      "language": "Zig",
-      "case": "mandelbrot",
-      "time_ms": 272,
-      "success": true
-    },
-    {
-      "language": "Zig",
-      "case": "quicksort",
-      "time_ms": 540,
-      "success": true
-    },
-    {
-      "language": "Zig",
-      "case": "prime_sieve",
-      "time_ms": 1394,
-      "success": true
-    },
-    {
-      "language": "Zig",
-      "case": "bubble_sort",
-      "time_ms": 1170,
-      "success": true
-    },
-    {
-      "language": "Zig",
-      "case": "matrix_multiply",
-      "time_ms": 765,
-      "success": true
-    },
-    {
-      "language": "Zig",
-      "case": "fib",
-      "time_ms": 980,
-      "success": true
-    },
-    {
-      "language": "Zig",
-      "case": "binary_tree_traverse",
-      "time_ms": 64,
-      "success": true
-    },
-    {
-      "language": "Zig",
-      "case": "counting_sort",
-      "time_ms": 350,
-      "success": true
-    },
-    {
-      "language": "Zig",
-      "case": "hanoi_tower",
-      "time_ms": 539,
-      "success": true
-    },
-    {
-      "language": "Swift",
-      "case": "mandelbrot",
-      "time_ms": 278,
-      "success": true
-    },
-    {
-      "language": "Swift",
-      "case": "quicksort",
-      "time_ms": 888,
-      "success": true
-    },
-    {
-      "language": "Swift",
-      "case": "prime_sieve",
-      "time_ms": 1883,
-      "success": true
-    },
-    {
-      "language": "Swift",
-      "case": "bubble_sort",
-      "time_ms": 1326,
-      "success": true
-    },
-    {
-      "language": "Swift",
-      "case": "matrix_multiply",
-      "time_ms": 635,
-      "success": true
-    },
-    {
-      "language": "Swift",
-      "case": "fib",
-      "time_ms": 1250,
-      "success": true
-    },
-    {
-      "language": "Swift",
-      "case": "binary_tree_traverse",
-      "time_ms": 144,
-      "success": true
-    },
-    {
-      "language": "Swift",
-      "case": "counting_sort",
-      "time_ms": 729,
-      "success": true
-    },
-    {
-      "language": "Swift",
-      "case": "hanoi_tower",
-      "time_ms": 1577,
-      "success": true
-    },
-    {
-      "language": "Dart(AOT)",
-      "case": "mandelbrot",
-      "time_ms": 354,
-      "success": true
-    },
-    {
-      "language": "Dart(AOT)",
-      "case": "quicksort",
-      "time_ms": 1237,
-      "success": true
-    },
-    {
-      "language": "Dart(AOT)",
-      "case": "prime_sieve",
-      "time_ms": 2767,
-      "success": true
-    },
-    {
-      "language": "Dart(AOT)",
-      "case": "bubble_sort",
-      "time_ms": 1900,
-      "success": true
-    },
-    {
-      "language": "Dart(AOT)",
-      "case": "matrix_multiply",
-      "time_ms": 3262,
-      "success": true
-    },
-    {
-      "language": "Dart(AOT)",
-      "case": "fib",
-      "time_ms": 1723,
-      "success": true
-    },
-    {
-      "language": "Dart(AOT)",
-      "case": "binary_tree_traverse",
-      "time_ms": 180,
-      "success": true
-    },
-    {
-      "language": "Dart(AOT)",
-      "case": "counting_sort",
-      "time_ms": 1747,
-      "success": true
-    },
-    {
-      "language": "Dart(AOT)",
-      "case": "hanoi_tower",
-      "time_ms": 862,
-      "success": true
-    },
-    {
-      "language": "Dart(JIT)",
-      "case": "mandelbrot",
-      "time_ms": 356,
-      "success": true
-    },
-    {
-      "language": "Dart(JIT)",
-      "case": "quicksort",
-      "time_ms": 1087,
-      "success": true
-    },
-    {
-      "language": "Dart(JIT)",
-      "case": "prime_sieve",
-      "time_ms": 5435,
-      "success": true
-    },
-    {
-      "language": "Dart(JIT)",
-      "case": "bubble_sort",
-      "time_ms": 1661,
-      "success": true
-    },
-    {
-      "language": "Dart(JIT)",
-      "case": "matrix_multiply",
-      "time_ms": 752,
-      "success": true
-    },
-    {
       "language": "Dart(JIT)",
       "case": "fib",
-      "time_ms": 4188,
-      "success": true
-    },
-    {
-      "language": "Dart(JIT)",
-      "case": "binary_tree_traverse",
-      "time_ms": 78,
-      "success": true
-    },
-    {
-      "language": "Dart(JIT)",
-      "case": "counting_sort",
-      "time_ms": 17080,
-      "success": true
-    },
-    {
-      "language": "Dart(JIT)",
-      "case": "hanoi_tower",
-      "time_ms": 1362,
+      "time_ms": 3500,
       "success": true
     }
   ]

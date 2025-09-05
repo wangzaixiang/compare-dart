@@ -3,11 +3,13 @@ function fib(n) {
     return fib(n - 1) + fib(n - 2);
 }
 
-const args = process.argv.slice(2);
+// 兼容 Node.js 和 QuickJS
+const args = typeof process !== 'undefined' ? process.argv.slice(2) : scriptArgs.slice(1);
 
 if (args.length === 0) {
     console.log('Usage: fib <n>');
-    process.exit(1);
+    if (typeof process !== 'undefined') process.exit(1);
+    else throw new Error('Usage: fib <n>');
 }
 
 const n = parseInt(args[0]);

@@ -102,6 +102,13 @@ languages:
     compile_cmd: null
     execute_cmd: "bun javascript/{case}.js"
     enabled: true  # 需要安装 Bun，默认禁用
+    
+  quickjs:
+    name: "JavaScript(QuickJS)"
+    src_template: "javascript/{case}.js"
+    compile_cmd: null
+    execute_cmd: "qjs javascript/{case}.js"
+    enabled: true  # 需要安装 QuickJS，默认禁用
 
   # Python 实现
   python:
